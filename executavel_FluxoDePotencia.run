@@ -1,0 +1,51 @@
+reset;
+
+#_______________________________________
+model;
+	include fluxodepotencia.mod;
+	
+#____________________________________
+#	Sistema de Distribuição
+
+data;
+	include Sistema_069.dat;
+	
+option solver knitro;
+	solve FuncaoObjetivo;
+	
+#-------------------------------------------
+
+# Perdas e potencia ativa e reativa nas linhas 
+param Pperdas{Ol};
+param Qperdas{Ol};
+
+for{ (i,j) in Ol}{
+	let Pperdas[i,j] := (I[i,j]) * R[i,j];
+	let Qperdas[i,j] := (I[i,j]) * X[i,j];
+}
+	
+	
+#___________________________________
+# Print dos Resultados
+ printf'------------------------------------------------------------------------------------------------';
+ 
+ printf'|--------|---------------|---------------|\n';
+ printf'| BARRA  |  Tensão [kV]  |  Tensão [pu]  |\n';
+ printf'|--------|---------------|---------------|\n';
+ 
+ for{i in Ob}{
+	printf '%8d %14.4f %10.4f\n',i,V[i], V[i]/Vnom;
+ }
+ printf'|--------|---------------|---------------|\n';
+ 
+ #Resultados das linhas
+ 
+ printf'\n\nResultados das Linhas\n\n';
+ printf'|-------|-------|-----------|-----------|-----------|-------------|-------------|\n';
+ printf'|    i  |    j  |   I [A]   |   P[kW]   |   Q[kVAr]   |   Pperdas[kVar]   |   Qperdas[kVar]   |\n';
+ printf'|-------|-------|-----------|-----------|-----------|-------------|-------------|\n';
+ 
+ for{(i,j) in Ol}{
+	printf'%6d %6d %10.4f %10.4f %10.4f %10.4f %10.4f\n',
+	i,j,I[i,j],P[i,j],Q[i,j], Pperdas[i,j],Qperdas[i,j];
+ }

@@ -1,0 +1,59 @@
+reset;
+
+#_______________________________________
+model;
+	include AlocacaoDeGeradoresOtimos.mod;
+	
+#____________________________________
+#	Sistema de Distribuição
+
+data;
+	include Sistema_069.dat;
+	
+#_____________________________________________
+# Solver - Solucionar o problema 
+# Knitro - Programa que vamos usar
+
+option solver cplex;
+	solve FuncaoObjetivo;
+
+# Tensão em pu
+
+param Vpu{Ob};
+
+for{ i in Ob}{
+	let Vpu[i] := sqrt(Vquadrado[i])/Vnom;
+}
+#-------------------------------------------
+# Perdas e potencia ativa e reativa nas linhas 
+param Pperdas{Ol};
+param Qperdas{Ol};
+
+for{ (i,j) in Ol}{
+	let Pperdas[i,j] := (Iquadrado[i,j]) * R[i,j];
+	let Qperdas[i,j] := (Iquadrado[i,j]) * X[i,j];
+}
+		
+#___________________________________
+# Print dos Resultados
+ printf'------------------------------------------------------------------------------------------------';
+ 
+ printf'|--------|---------------|---------------|\n';
+ printf'| BARRA  |  Tensão [kV]  |  Tensão [pu]  |\n';
+ printf'|--------|---------------|---------------|\n';
+ 
+ for{i in Ob}{
+	printf '%8d %14.4f %10.4f\n',i,sqrt(Vquadrado[i]), Vpu[i];
+ }
+ printf'|--------|---------------|---------------|\n';
+ 
+ #Resultados das linhas
+ 
+ printf'\n\nResultados das Linhas\n\n';
+ printf'|-------|-------|-----------|-----------|-----------|-------------|---------------|------------|--------------|\n';
+ printf'|    i  |    j  |   I [A]   |   P[kW]   |   Q[kVar] | Pperdas[kW] | Qperdas[kVar] |   Pgd[kW]  |  Qgd[kVar]   |\n';
+ printf'|-------|-------|-----------|-----------|-----------|-------------|---------------|------------|--------------|\n';
+ 
+ for{(i,j) in Ol}{
+ 	printf'%6d %9d %12.4f %12.4f %11.4f %11.4f %11.4f %11.4f  %11.4f\n',i,j,sqrt(Iquadrado[i,j]),P[i,j],Q[i,j],Pperdas[i,j],Qperdas[i,j],Pgd[i],Qgd[i];
+ }
